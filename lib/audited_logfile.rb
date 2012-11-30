@@ -28,7 +28,7 @@ module Audited
       class Audit < ::ActiveRecord::Base
         DO_NOT_LOG = true
         after_create do |record|
-          changes = audited_changes.map { |k, v| "#{k}: [#{v.first}, #{v.last}]"}.join(', ')
+          changes = audited_changes.map { |k, v| "#{k}: #{v.is_a?(Array) ? "[#{v.first}, #{v.last}]" : v}"}.join(', ')
           AuditedLogfile.logger.info "#{Time.now.iso8601(1)}, #{action.upcase}, #{user.try(:email) || 'Guest'}, #{auditable_type}, #{auditable_id}, (#{changes})"
         end
       end

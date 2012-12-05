@@ -3,6 +3,7 @@ require 'audited/adapters/active_record'
 
 module AuditedLogfile
   mattr_accessor :logfile
+  mattr_accessor :skip
   @@loger = nil
 
   def self.setup
@@ -20,13 +21,16 @@ module AuditedLogfile
     end
     @@loger
   end
+
+  def self.skip
+    @@skip || []
+  end
 end
 
 module Audited
   module Adapters
     module ActiveRecord
       class Audit < ::ActiveRecord::Base
-        DO_NOT_LOG = true
         after_create do |record|
           changes = audited_changes.map { |k, v| "#{k}: #{v.is_a?(Array) ? "[#{v.first}, #{v.last}]" : v}"}.join(', ')
           AuditedLogfile.logger.info "#{Time.now.iso8601(1)}, #{action.upcase}, #{user.try(:email) || 'Guest'}, #{auditable_type}, #{auditable_id}, (#{changes})"
@@ -42,7 +46,7 @@ module ActiveRecord
       alias_method :inherited_orig, :inherited
 
       def inherited(subclass)
-        unless defined? subclass::DO_NOT_LOG
+        unless subclass.name.in? AuditedLogfile.skip
           subclass.class_eval %(
             audited :allow_mass_assignment => true
             attr_protected :audit_ids

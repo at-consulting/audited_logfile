@@ -8,8 +8,8 @@
 === Возможные настройки
   AuditedLogfile.setup do |config|
     config.logfile = 'log/mylogfile.log'
+    config.skip = ['ActiveRecord::SessionStore::Session']
   end
 
 По умолчанию логи пишутся в log/audit.log.
-
-Действия с объектами моделей, определяющих константу DO_NOT_LOG логироваться не будут.
+Опция skip опеределяет массив имен классов, для которых логирование включено не будет.

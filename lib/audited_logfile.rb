@@ -31,7 +31,7 @@ module Audited
   module Adapters
     module ActiveRecord
       class Audit < ::ActiveRecord::Base
-        after_create do |record|
+        before_create do |record|
           changes = audited_changes.map { |k, v| "#{k}: #{v.is_a?(Array) ? "[#{v.first}, #{v.last}]" : v}"}.join(', ')
           AuditedLogfile.logger.info "#{Time.now.iso8601(1)}, #{action.upcase}, #{user.try(:email) || 'Guest'}, #{auditable_type}, #{auditable_id}, (#{changes})"
         end

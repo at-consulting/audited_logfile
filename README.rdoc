@@ -11,5 +11,8 @@
     config.skip = ['ActiveRecord::SessionStore::Session']
   end
 
+Есть возможность задать несколько Audited.current_user_method:
+  Audited.current_user_method = [:current_admin_user, :current_user]
+
 По умолчанию логи пишутся в log/audit.log.
 Опция skip опеределяет массив имен классов, для которых логирование включено не будет.

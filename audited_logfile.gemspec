@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name        = 'audited_logfile'
-  s.version     = '0.0.5'
+  s.version     = '0.0.6'
   s.date        = '2012-12-21'
   s.summary     = "audited_logfile"
   s.description = "Audited extention to log audit"

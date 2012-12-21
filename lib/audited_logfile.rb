@@ -72,9 +72,11 @@ module ActiveRecord
 end
 
 Warden::Manager.after_authentication do |user,auth,opts|
-  AuditedLogfile.logger.info "#{Time.now.iso8601(1)}, SIGNIN, #{user.class}(#{user.id}): #{user.email}"
+  user_info = user.present? ? "#{user.class}(#{user.id}): #{user.email}" : 'Guest'
+  AuditedLogfile.logger.info "#{Time.now.iso8601(1)}, SIGNIN, #{user_info}"
 end
 
 Warden::Manager.before_logout do |user,auth,scope|
-  AuditedLogfile.logger.info "#{Time.now.iso8601(1)}, SIGNOUT, #{user.class}(#{user.id}): #{user.email}"
+  user_info = user.present? ? "#{user.class}(#{user.id}): #{user.email}" : 'Guest'
+  AuditedLogfile.logger.info "#{Time.now.iso8601(1)}, SIGNOUT, #{user_info}"
 end

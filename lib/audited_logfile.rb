@@ -33,7 +33,8 @@ module Audited
       class Audit < ::ActiveRecord::Base
         before_create do |record|
           changes = audited_changes.map { |k, v| "#{k}: #{v.is_a?(Array) ? "[#{v.first}, #{v.last}]" : v}"}.join(', ')
-          AuditedLogfile.logger.info "#{Time.now.iso8601(1)}, #{action.upcase}, #{user.try(:email) || 'Guest'}, #{auditable_type}, #{auditable_id}, (#{changes})"
+          user_info = user ? "#{user_type}(#{user_id}): #{user.try(:email)}" : 'Guest'
+          AuditedLogfile.logger.info "#{Time.now.iso8601(1)}, #{action.upcase}, #{user_info}, #{auditable_type}, #{auditable_id}, (#{changes})"
         end
       end
     end

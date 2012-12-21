@@ -38,6 +38,18 @@ module Audited
       end
     end
   end
+
+  class Sweeper < ActiveModel::Observer
+    def current_user
+      if Audited.current_user_method.is_a? Array
+        Audited.current_user_method.map do |method|
+          controller.send(method) if controller.respond_to?(method, true)
+        end.compact.first
+      else
+        controller.send(Audited.current_user_method) if controller.respond_to?(Audited.current_user_method, true)
+      end
+    end
+  end
 end
 
 module ActiveRecord

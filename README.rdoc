@@ -16,3 +16,15 @@
 
 По умолчанию логи пишутся в log/audit.log.
 Опция skip опеределяет массив имен классов, для которых логирование включено не будет.
+
+Пример конфига logrotate. 
+
+/etc/logrotate.d/spfacilities.conf
+ /home/spfacilities/spfacilities/shared/log/*.log {
+    weekly
+    size=10M
+    missingok
+    notifempty
+    nomail
+    copytruncate
+  }

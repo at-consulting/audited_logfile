@@ -34,7 +34,11 @@ module Audited
         before_create do |record|
           changes = audited_changes.map { |k, v| "#{k}: #{v.is_a?(Array) ? "[#{v.first}, #{v.last}]" : v}"}.join(', ')
           user_info = user ? "#{user_type}(#{user_id}): #{user.try(:email)}" : 'Guest'
-          AuditedLogfile.logger.info "#{Time.now.iso8601(1)}, #{action.upcase}, #{user_info}, #{auditable_type}, #{auditable_id}, (#{changes})"
+          if action == 'report'
+            AuditedLogfile.logger.info "#{Time.now.iso8601(1)}, #{action.upcase}, #{user_info}, #{audited_changes.inspect}"
+          else
+            AuditedLogfile.logger.info "#{Time.now.iso8601(1)}, #{action.upcase}, #{user_info}, #{auditable_type}, #{auditable_id}, (#{changes})"
+          end
         end
       end
     end
@@ -50,6 +54,10 @@ module Audited
         controller.send(Audited.current_user_method) if controller.respond_to?(Audited.current_user_method, true)
       end
     end
+  end
+
+  def self.report(options)
+    Adapters::ActiveRecord::Audit.create!(action: 'report', audited_changes: options)
   end
 end
 

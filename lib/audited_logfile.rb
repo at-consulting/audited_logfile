@@ -67,7 +67,7 @@ module ActiveRecord
       alias_method :inherited_orig, :inherited
 
       def inherited(subclass)
-        unless subclass.name.in? AuditedLogfile.skip
+        unless AuditedLogfile.skip.include? subclass.name
           subclass.class_eval %(
             audited :allow_mass_assignment => true
             attr_protected :audit_ids

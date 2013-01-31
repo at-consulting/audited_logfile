@@ -25,6 +25,20 @@ module AuditedLogfile
   def self.skip
     @@skip || []
   end
+
+  module ActiveRecord
+    class LogSubscriber < ActiveSupport::LogSubscriber
+      def sql(event)
+        if event.payload[:sql] =~ /\ASELECT/i
+          user = Thread.current[:sql_audit_user]
+          user_info = user ? "#{user.class}(#{user.id}): #{user.try(:email)}" : 'Unknown'
+          AuditedLogfile.logger.info "#{Time.now.iso8601(1)}, SELECT, #{user_info}, `#{event.payload[:sql]}`"
+        end
+      end
+
+      attach_to :active_record
+    end
+  end
 end
 
 module Audited
@@ -32,12 +46,18 @@ module Audited
     module ActiveRecord
       class Audit < ::ActiveRecord::Base
         before_create do |record|
-          changes = audited_changes.map { |k, v| "#{k}: #{v.is_a?(Array) ? "[#{v.first}, #{v.last}]" : v}"}.join(', ')
-          user_info = user ? "#{user_type}(#{user_id}): #{user.try(:email)}" : 'Guest'
-          if action == 'report'
-            AuditedLogfile.logger.info "#{Time.now.iso8601(1)}, #{action.upcase}, #{user_info}, #{audited_changes.inspect}"
+          if changes.is_a? Hash
+            changes = audited_changes.map { |k, v| "#{k}: #{v.is_a?(Array) ? "[#{v.first.inspect}, #{v.last.inspect}]" : v}"}.join(', ')
+          end
+
+          user_info = user ? "#{user_type}(#{user_id}): #{user.try(:email)}" : 'Unknown'
+          common_log = "#{Time.now.iso8601(1)}, #{action.upcase}, #{user_info}"
+
+          case action
+          when 'report'
+            AuditedLogfile.logger.info "#{common_log}, #{audited_changes.inspect}"
           else
-            AuditedLogfile.logger.info "#{Time.now.iso8601(1)}, #{action.upcase}, #{user_info}, #{auditable_type}, #{auditable_id}, (#{changes})"
+            AuditedLogfile.logger.info "#{common_log}, #{auditable_type}, #{auditable_id}, (#{changes})"
           end
         end
       end
@@ -45,6 +65,17 @@ module Audited
   end
 
   class Sweeper < ActiveModel::Observer
+    def before(controller)
+      self.controller = controller
+      Thread.current[:sql_audit_user] = current_user
+      true
+    end
+
+    def after(controller)
+      self.controller = nil
+      Thread.current[:sql_audit_user] = nil
+    end
+
     def current_user
       if Audited.current_user_method.is_a? Array
         Audited.current_user_method.map do |method|
@@ -80,11 +111,11 @@ module ActiveRecord
 end
 
 Warden::Manager.after_authentication do |user,auth,opts|
-  user_info = user.present? ? "#{user.class}(#{user.id}): #{user.email}" : 'Guest'
+  user_info = user.present? ? "#{user.class}(#{user.id}): #{user.email}" : 'Unknown'
   AuditedLogfile.logger.info "#{Time.now.iso8601(1)}, SIGNIN, #{user_info}"
 end
 
 Warden::Manager.before_logout do |user,auth,scope|
-  user_info = user.present? ? "#{user.class}(#{user.id}): #{user.email}" : 'Guest'
+  user_info = user.present? ? "#{user.class}(#{user.id}): #{user.email}" : 'Unknown'
   AuditedLogfile.logger.info "#{Time.now.iso8601(1)}, SIGNOUT, #{user_info}"
 end

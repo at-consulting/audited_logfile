@@ -1,7 +1,7 @@
 Gem::Specification.new do |s|
   s.name        = 'audited_logfile'
-  s.version     = '0.0.9'
-  s.date        = '2013-01-31'
+  s.version     = '0.0.10'
+  s.date        = '2013-02-12'
   s.summary     = "audited_logfile"
   s.description = "Audited extention to log audit"
   s.authors     = ["Alexander Kiseliov"]

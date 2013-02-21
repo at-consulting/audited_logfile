@@ -53,11 +53,11 @@ module Audited
           user_info = user ? "#{user_type}(#{user_id}): #{user.try(:email)}" : 'Unknown'
           common_log = "#{Time.now.iso8601(1)}, #{action.upcase}, #{user_info}"
 
-          case action
-          when 'report'
-            AuditedLogfile.logger.info "#{common_log}, #{audited_changes.inspect}"
-          else
+          case action.to_s
+          when 'create', 'update', 'destroy'
             AuditedLogfile.logger.info "#{common_log}, #{auditable_type}, #{auditable_id}, (#{changes})"
+          else
+            AuditedLogfile.logger.info "#{common_log}, #{audited_changes.inspect}"
           end
         end
       end
@@ -88,7 +88,8 @@ module Audited
   end
 
   def self.report(options)
-    Adapters::ActiveRecord::Audit.create!(action: 'report', audited_changes: options)
+    action = options[:action] || 'report'
+    Adapters::ActiveRecord::Audit.create!(action: action, audited_changes: options)
   end
 end
 

@@ -92,15 +92,15 @@ module Audited
     Adapters::ActiveRecord::Audit.create!(action: action, audited_changes: options)
   end
 
-  def self.week_activity_chart_data(actions)
+  def self.week_activity_chart_data(actions, since, till)
     records = Adapters::ActiveRecord::Audit
       .select("TO_CHAR(created_at, 'DD') DAY, TO_CHAR(created_at, 'MM') MONTH, TO_CHAR(created_at, 'YYYY') YEAR")
       .where(action: actions)
-      .where('created_at >= ? AND created_at < ?', Date.today - 6, Date.today + 1)
+      .where('created_at >= ? AND created_at < ?', since, till + 1)
     data = Hash[Adapters::ActiveRecord::Audit
       .find_by_sql("SELECT DAY, MONTH, YEAR, COUNT(*) COUNT FROM (#{records.to_sql}) GROUP BY YEAR, MONTH, DAY ORDER BY YEAR, MONTH, DAY")
       .map { |x| [Date.new(x.year.to_i, x.month.to_i, x.day.to_i), x.count.to_i] }]
-    (Date.today - 6 .. Date.today).map { |day| [day, (data[day] || 0)] }
+    (since .. till).map { |day| [day, (data[day] || 0)] }
   end
 end
 

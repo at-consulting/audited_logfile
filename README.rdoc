@@ -39,11 +39,11 @@
 dashboard.html.haml
 
   #placeholder{style: 'width: 600px; height: 250px;'}
-
+  - data = Audited.week_activity_chart_data([:create, :update, :destroy], Date.today-1.week+1, Date.today)
   - content_for :js do
     :javascript
       $(function() {
-        var data = [#{Audited.week_activity_chart_data([:create, :update, :destroy]).map { |day, count| "['#{localize(day)}', #{count}]" }.join(',')}];
+        var data = [#{data.map { |day, count| "['#{localize(day)}', #{count}]" }.join(',')}];
 
         $.plot("#placeholder", [ data ], {
           series: {
@@ -60,8 +60,9 @@ dashboard.html.haml
         });
       });
 
-Метод Audited.week_activity_chart_data(actions) возвращает пары [Date, Fixnum] - дата и количество записей о выбранных типах активности.
+Метод Audited.week_activity_chart_data(actions, since, till) возвращает пары [Date, Fixnum] - дата и количество записей о выбранных типах активности.
 аргумент actions - тип активности пользователя(сейчас в БД сохраняются действия create, update, destroy, report)
+since, till - экземпляры класса Date. Задают интервал для выборки.
 
 Для примера использовалась библиотека flot (http://www.flotcharts.org/).
 Были задействованы компоненты: jquery.flot, jquery.flot.categories.

@@ -33,3 +33,35 @@
     nomail
     copytruncate
   }
+
+=== Пример построения графика активности за последнюю неделю:
+
+dashboard.html.haml
+
+  #placeholder{style: 'width: 600px; height: 250px;'}
+
+  - content_for :js do
+    :javascript
+      $(function() {
+        var data = [#{Audited.week_activity_chart_data([:create, :update, :destroy]).map { |day, count| "['#{localize(day)}', #{count}]" }.join(',')}];
+
+        $.plot("#placeholder", [ data ], {
+          series: {
+            bars: {
+              show: true,
+              barWidth: 0.6,
+              align: "center"
+            }
+          },
+          xaxis: {
+            mode: "categories",
+            tickLength: 0
+          }
+        });
+      });
+
+Метод Audited.week_activity_chart_data(actions) возвращает пары [Date, Fixnum] - дата и количество записей о выбранных типах активности.
+аргумент actions - тип активности пользователя(сейчас в БД сохраняются действия create, update, destroy, report)
+
+Для примера использовалась библиотека flot (http://www.flotcharts.org/).
+Были задействованы компоненты: jquery.flot, jquery.flot.categories.
